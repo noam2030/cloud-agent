@@ -1,18 +1,33 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { getConversation, sendMessage, type Message } from './api'
 
-type Message = { role: 'user' | 'assistant'; content: string }
+type Props = {
+  conversationId: string | null // null = a new, empty chat
+  open: boolean
+  onToggle: () => void
+  onNewChat: () => void
+  onSaved: (conversationId: string) => void
+}
 
-// Set at build time. Vercel reads it from its project settings.
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
-
-export default function Chat() {
+export default function Chat({ conversationId, open, onToggle, onNewChat, onSaved }: Props) {
   const [messages, setMessages] = useState<Message[]>([])
+  // An existing conversation starts "loading" until its messages arrive.
+  const [fetching, setFetching] = useState(conversationId !== null)
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  // Hiding the window doesn't unmount Chat, so the conversation is kept.
-  const [open, setOpen] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+
+  // App gives Chat a new `key` per conversation, so this runs once per conversation.
+  useEffect(() => {
+    if (conversationId === null) return
+    getConversation(conversationId)
+      .then((c) => setMessages(c.messages))
+      .catch(() => setError('Could not load this conversation.'))
+      .finally(() => setFetching(false))
+    // Only on mount: after a send, the messages on screen are already current.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -23,22 +38,16 @@ export default function Chat() {
     const text = input.trim()
     if (!text || loading) return
 
-    // The backend keeps no state, so every request carries the whole conversation.
-    const history: Message[] = [...messages, { role: 'user', content: text }]
-    setMessages(history)
+    // Show the question right away; the server saves it with the answer.
+    setMessages((prev) => [...prev, { role: 'user', content: text }])
     setInput('')
     setError('')
     setLoading(true)
 
     try {
-      const res = await fetch(`${API_URL}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history }),
-      })
-      if (!res.ok) throw new Error(`Server returned ${res.status}`)
-      const data: { reply: string } = await res.json()
-      setMessages([...history, { role: 'assistant', content: data.reply }])
+      const res = await sendMessage(conversationId, text)
+      setMessages((prev) => [...prev, { role: 'assistant', content: res.reply }])
+      onSaved(res.conversation_id)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Request failed')
     } finally {
@@ -47,16 +56,24 @@ export default function Chat() {
   }
 
   return (
-    <div className="chat-widget">
+    <div className={`chat-widget ${open ? 'is-open' : ''}`}>
       {open && (
-        <section className="chat">
+        <section className="chat" aria-label="Chat">
           <header>
-            <span>Ask AI</span>
-            <button type="button" onClick={() => setOpen(false)} aria-label="Close chat">
-              ×
-            </button>
+            <strong>Ask AI</strong>
+            <div className="header-actions">
+              <button type="button" onClick={onNewChat} aria-label="New chat" title="New chat">
+                +
+              </button>
+              <button type="button" onClick={onToggle} aria-label="Close chat" title="Close">
+                ×
+              </button>
+            </div>
           </header>
           <div className="messages">
+            {messages.length === 0 && !loading && !fetching && (
+              <p className="hint">Ask me anything to start a conversation.</p>
+            )}
             {messages.map((m, i) => (
               <div key={i} className={`message ${m.role}`}>
                 {m.content}
@@ -70,11 +87,11 @@ export default function Chat() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask a question"
+              placeholder="Type your question..."
               autoFocus
             />
-            <button type="submit" disabled={loading || !input.trim()}>
-              Send
+            <button type="submit" disabled={loading || !input.trim()} aria-label="Send">
+              ➤
             </button>
           </form>
         </section>
@@ -82,7 +99,7 @@ export default function Chat() {
       <button
         type="button"
         className="chat-toggle"
-        onClick={() => setOpen(!open)}
+        onClick={onToggle}
         aria-label={open ? 'Hide chat' : 'Open chat'}
       >
         {open ? '×' : '💬'}

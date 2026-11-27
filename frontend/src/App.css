@@ -1,29 +1,133 @@
+/* ---------- Page ---------- */
 .page {
-  max-width: 900px;
+  max-width: 860px;
   margin: 0 auto;
-  padding: 2rem 1rem;
-  font-family: system-ui, sans-serif;
+  padding: 3rem 1.5rem 7rem;
 }
 
-.list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.list li {
+.topbar {
   display: flex;
-  flex-direction: column;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #eee;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
 }
 
-.list span {
-  color: #666;
+.eyebrow {
+  margin: 0;
+  color: var(--muted);
   font-size: 0.9rem;
 }
 
-/* Fixed to the bottom-right corner, above the page content. */
+.topbar h1 {
+  margin: 0.25rem 0 0;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  letter-spacing: -0.02em;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: white;
+  font-weight: 600;
+}
+
+/* ---------- Conversations card ---------- */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.primary {
+  border: none;
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  background: var(--accent);
+  color: white;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.primary:hover {
+  background: var(--accent-2);
+}
+
+.empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 2rem 0;
+  margin: 0;
+}
+
+.conversation-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.conversation-list button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 0.75rem;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  color: inherit;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.conversation-list button:hover,
+.conversation-list button.active {
+  background: #eef2ff;
+}
+
+.conversation-list .title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.conversation-list .meta {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.error {
+  color: #b91c1c;
+  font-size: 0.9rem;
+  margin: 0.5rem 1rem;
+}
+
+/* ---------- Floating chat ---------- */
 .chat-widget {
   position: fixed;
   right: 1.5rem;
@@ -32,51 +136,72 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 0.75rem;
-  font-family: system-ui, sans-serif;
   z-index: 1000;
 }
 
 .chat-toggle {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
+  width: 58px;
+  height: 58px;
   border: none;
-  background: #2563eb;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: white;
   font-size: 1.5rem;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.4);
+  transition: transform 0.15s;
+}
+
+.chat-toggle:hover {
+  transform: scale(1.06);
 }
 
 .chat {
-  width: 360px;
-  max-width: calc(100vw - 3rem);
-  height: 480px;
+  width: 380px;
+  height: 540px;
   max-height: calc(100vh - 8rem);
   display: flex;
   flex-direction: column;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  background: var(--surface);
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(16, 24, 40, 0.25);
   overflow: hidden;
+  animation: pop 0.18s ease-out;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
 }
 
 .chat header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
-  background: #2563eb;
+  justify-content: space-between;
+  padding: 0.9rem 1rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: white;
-  font-weight: 600;
 }
 
-.chat header button {
-  background: none;
+.header-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.header-actions button {
+  width: 32px;
+  height: 32px;
   border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
   color: white;
-  font-size: 1.25rem;
-  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.header-actions button:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .messages {
@@ -86,47 +211,104 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  background: #fafafb;
+}
+
+.hint {
+  margin: auto;
+  color: var(--muted);
+  text-align: center;
 }
 
 .message {
-  padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  max-width: 80%;
+  max-width: 82%;
+  padding: 0.6rem 0.85rem;
+  border-radius: 16px;
+  line-height: 1.45;
   white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .message.user {
   align-self: flex-end;
-  background: #2563eb;
+  background: var(--accent);
   color: white;
+  border-bottom-right-radius: 4px;
 }
 
 .message.assistant {
   align-self: flex-start;
-  background: #f1f1f1;
-  color: #111;
-}
-
-.error {
-  color: #b91c1c;
-  margin: 0 1rem;
-  font-size: 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
 }
 
 .chat form {
   display: flex;
   gap: 0.5rem;
   padding: 0.75rem;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border);
 }
 
 .chat input {
   flex: 1;
-  padding: 0.5rem;
-  font-size: 1rem;
+  min-width: 0;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 16px; /* 16px stops iOS from zooming in on focus */
+  outline: none;
+}
+
+.chat input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
 }
 
 .chat form button {
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+}
+
+.chat form button:disabled {
+  background: #c7d2fe;
+  cursor: default;
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 640px) {
+  .page {
+    padding: 1.5rem 1rem 6rem;
+  }
+
+  .card {
+    padding: 0.75rem;
+  }
+
+  .chat-widget {
+    right: 1rem;
+    bottom: 1rem;
+  }
+
+  /* The open chat takes the whole screen; its header has the close button. */
+  .chat-widget.is-open {
+    inset: 0;
+  }
+
+  .chat-widget.is-open .chat-toggle {
+    display: none;
+  }
+
+  .chat {
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+  }
 }
