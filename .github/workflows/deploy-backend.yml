@@ -31,6 +31,7 @@ jobs:
           # One origin only: the action splits env_vars on commas.
           env_vars: |-
             ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS }}
+            MCP_URL=${{ vars.MCP_URL }}
           secrets: |-
             OPENAI_API_KEY=cloud-agent-openai-key:latest
           # Capped instances limit OpenAI spend. Runs as a minimal account

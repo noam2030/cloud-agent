@@ -6,7 +6,7 @@
   - `main.py`: builds the app (CORS, routes). Entry point for uvicorn.
   - `api.py`: HTTP endpoints (controller). Validation, status codes, current user.
   - `db.py`: Firestore reads and writes. No HTTP or AI code.
-  - `agent.py`: LangChain + OpenAI. No HTTP or database code.
+  - `agent.py`: LangChain agent + OpenAI, with tools from the MCP server at `MCP_URL` (repo `cloud-mcp`). No HTTP or database code.
   - `models.py`: shared Pydantic shapes (User, Message, Conversation).
 - `docs/`: architecture and decision records (ADRs).
 
