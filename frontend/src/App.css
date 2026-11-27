@@ -47,32 +47,9 @@
   padding: 1.25rem;
 }
 
-.card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.card-header h2 {
-  margin: 0;
+.card h2 {
+  margin: 0 0 0.75rem;
   font-size: 1.1rem;
-}
-
-.primary {
-  border: none;
-  border-radius: 999px;
-  padding: 0.55rem 1rem;
-  background: var(--accent);
-  color: white;
-  font-weight: 500;
-  white-space: nowrap;
-  transition: background 0.15s;
-}
-
-.primary:hover {
-  background: var(--accent-2);
 }
 
 .empty {
