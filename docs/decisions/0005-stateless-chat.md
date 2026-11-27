@@ -1,5 +1,7 @@
 # 5. Stateless chat API
 
+**Status:** Superseded by [ADR 6](0006-conversations-in-firestore.md).
+
 **Context:** Follow-up questions need the earlier conversation.
 
 **Decision:** The frontend keeps the history and sends all of it on every request. The backend stores nothing.

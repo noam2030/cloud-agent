@@ -10,7 +10,14 @@ See [docs/architecture.md](docs/architecture.md) for how it fits together and [d
 
 ## Run locally
 
-Backend (needs [uv](https://docs.astral.sh/uv/)):
+Firestore emulator (needs Java), so local runs never touch the real database:
+
+```bash
+gcloud components install cloud-firestore-emulator
+gcloud emulators firestore start --host-port=localhost:8089
+```
+
+Backend (needs [uv](https://docs.astral.sh/uv/)), in another terminal:
 
 ```bash
 cd backend
@@ -45,7 +52,7 @@ Three service accounts, each with only what it needs:
 |---|---|---|
 | `cloud-agent-deployer` | GitHub Actions (via WIF) | start source deploys, act as the two below |
 | `cloud-agent-builder` | Cloud Build | build the image (`run.builder`) |
-| `cloud-agent-runtime` | the running container | read the OpenAI key secret |
+| `cloud-agent-runtime` | the running container | read the OpenAI key secret, read/write Firestore |
 
 ```bash
 P=your-project-id
@@ -75,6 +82,8 @@ gcloud secrets create cloud-agent-openai-key
 printf %s "sk-..." | gcloud secrets versions add cloud-agent-openai-key --data-file=-
 gcloud secrets add-iam-policy-binding cloud-agent-openai-key \
   --member=serviceAccount:$RUN_SA --role=roles/secretmanager.secretAccessor
+# Conversations live in the project's (default) Firestore database
+gcloud projects add-iam-policy-binding $P --member=serviceAccount:$RUN_SA --role=roles/datastore.user
 
 # 4. Workload Identity Federation: trust GitHub tokens from this repo only
 gcloud iam workload-identity-pools create github --location=global   # skip if it exists
