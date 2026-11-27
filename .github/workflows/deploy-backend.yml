@@ -33,10 +33,11 @@ jobs:
             ALLOWED_ORIGINS="${{ vars.ALLOWED_ORIGINS }}"
           secrets: |-
             OPENAI_API_KEY=cloud-agent-openai-key:latest
-          # Public URL without IAM changes; capped instances limit OpenAI spend.
-          # Runs as a minimal account (reads one secret), builds as another (run.builder only).
+          # Capped instances limit OpenAI spend. Runs as a minimal account
+          # (reads one secret), builds as another (run.builder only).
+          # Making the service public is a one-time step (see README), so the
+          # deployer never needs setIamPolicy.
           flags: >-
-            --no-invoker-iam-check
             --max-instances=2
             --service-account=${{ vars.RUNTIME_SA }}
             --build-service-account=projects/${{ vars.GCP_PROJECT_ID }}/serviceAccounts/${{ vars.BUILD_SA }}
