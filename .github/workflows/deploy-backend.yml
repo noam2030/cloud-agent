@@ -20,6 +20,7 @@ jobs:
         with:
           workload_identity_provider: ${{ vars.WIF_PROVIDER }}
           service_account: ${{ vars.DEPLOY_SA }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
 
       - id: deploy
         uses: google-github-actions/deploy-cloudrun@v3
@@ -31,7 +32,13 @@ jobs:
           env_vars: |-
             ALLOWED_ORIGINS="${{ vars.ALLOWED_ORIGINS }}"
           secrets: |-
-            OPENAI_API_KEY=openai-api-key:latest
-          flags: --allow-unauthenticated
+            OPENAI_API_KEY=cloud-agent-openai-key:latest
+          # Public URL without IAM changes; capped instances limit OpenAI spend.
+          # Runs as a minimal account (reads one secret), builds as another (run.builder only).
+          flags: >-
+            --no-invoker-iam-check
+            --max-instances=2
+            --service-account=${{ vars.RUNTIME_SA }}
+            --build-service-account=projects/${{ vars.GCP_PROJECT_ID }}/serviceAccounts/${{ vars.BUILD_SA }}
 
       - run: curl -fsS "${{ steps.deploy.outputs.url }}/api/health"
