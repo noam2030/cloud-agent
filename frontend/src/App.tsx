@@ -46,12 +46,7 @@ export default function App() {
       </header>
 
       <section className="card">
-        <div className="card-header">
-          <h2>Your conversations</h2>
-          <button className="primary" onClick={() => openConversation(null)}>
-            + New chat
-          </button>
-        </div>
+        <h2>Your conversations</h2>
 
         {listError && <p className="error">{listError}</p>}
         {!listError && conversations.length === 0 && (
