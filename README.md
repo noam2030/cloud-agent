@@ -103,12 +103,17 @@ gh variable set BUILD_SA --body $BUILD_SA
 gh variable set RUNTIME_SA --body $RUN_SA
 gh variable set WIF_PROVIDER --body projects/$N/locations/global/workloadIdentityPools/github/providers/cloud-agent
 gh variable set ALLOWED_ORIGINS --body https://your-app.vercel.app   # one origin, no commas
+gh variable set MCP_URL --body https://cloud-mcp-$N.us-central1.run.app   # the cloud-mcp service
 ```
 
 ```bash
 # 6. After the first deploy creates the service, make it public (once).
 #    Kept out of the pipeline so the deployer never needs setIamPolicy.
 gcloud run services update cloud-agent-backend --region us-central1 --no-invoker-iam-check
+
+# 7. Let the backend call the private MCP service (after cloud-mcp is deployed).
+gcloud run services add-iam-policy-binding cloud-mcp --region us-central1 \
+  --member=serviceAccount:$RUN_SA --role=roles/run.invoker
 ```
 
 After that, every push to `main` that touches `backend/` runs [.github/workflows/deploy-backend.yml](.github/workflows/deploy-backend.yml). You can also start it by hand from the Actions tab.

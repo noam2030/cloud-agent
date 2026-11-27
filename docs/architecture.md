@@ -7,7 +7,8 @@ Browser ──> Vercel: static React app (HTML/JS/CSS)
             ▲         │          ▲
      Secret Manager   │     GitHub Actions
      (OPENAI_API_KEY) │     (deploys on merge to main)
-                      └──> Firestore (conversations)
+                      ├──> Firestore (conversations)
+                      └──> cloud-mcp: private Cloud Run MCP server (tools)
 ```
 
 ## Page load
@@ -22,7 +23,7 @@ Browser ──> Vercel: static React app (HTML/JS/CSS)
 3. The page comes from Vercel and the API from Cloud Run, which are different origins, so the browser first sends a CORS preflight (`OPTIONS`). FastAPI's `CORSMiddleware` answers it if the origin is in `ALLOWED_ORIGINS`.
 4. Pydantic validates the body (length limits) and rejects bad input with 422.
 5. The backend loads the conversation from Firestore (404 if it isn't this user's) and appends the new question.
-6. The last 50 messages become LangChain `HumanMessage`/`AIMessage` objects, a `SystemMessage` goes first, and `ChatOpenAI.ainvoke` calls OpenAI.
+6. The backend fetches the tool list from the MCP server (with a Google ID token, because that service is private). The last 50 messages go to a LangChain agent. The model may call a tool (for example `get_current_time`), get the result from the MCP server, and then answer. If the MCP server is down, it answers without tools.
 7. The backend saves the whole conversation back to Firestore, with the first question as its title, and returns `{conversation_id, reply}`. If OpenAI fails, it saves nothing and returns 502.
 8. The browser shows the reply and refreshes the list.
 
