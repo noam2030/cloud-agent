@@ -39,50 +39,67 @@ After that, every push to `main` deploys, and every PR gets a preview URL.
 
 ### Backend: Google Cloud Run (one time)
 
+Three service accounts, each with only what it needs:
+
+| Account | Used by | Can do |
+|---|---|---|
+| `cloud-agent-deployer` | GitHub Actions (via WIF) | start source deploys, act as the two below |
+| `cloud-agent-builder` | Cloud Build | build the image (`run.builder`) |
+| `cloud-agent-runtime` | the running container | read the OpenAI key secret |
+
 ```bash
-PROJECT_ID=your-project-id
-REGION=us-central1
+P=your-project-id
+N=$(gcloud projects describe $P --format='value(projectNumber)')
 REPO=noam2030/cloud-agent
-PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
-SA=github-deployer@$PROJECT_ID.iam.gserviceaccount.com
-RUNTIME_SA=$PROJECT_NUMBER-compute@developer.gserviceaccount.com
-gcloud config set project $PROJECT_ID
+DEPLOY_SA=cloud-agent-deployer@$P.iam.gserviceaccount.com
+BUILD_SA=cloud-agent-builder@$P.iam.gserviceaccount.com
+RUN_SA=cloud-agent-runtime@$P.iam.gserviceaccount.com
 
 # 1. APIs
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com \
   artifactregistry.googleapis.com secretmanager.googleapis.com iamcredentials.googleapis.com
 
-# 2. OpenAI key in Secret Manager, readable by the Cloud Run runtime account
-printf %s "sk-..." | gcloud secrets create openai-api-key --data-file=-
-gcloud secrets add-iam-policy-binding openai-api-key \
-  --member=serviceAccount:$RUNTIME_SA --role=roles/secretmanager.secretAccessor
-
-# 3. Service account that GitHub Actions acts as
-gcloud iam service-accounts create github-deployer
-for role in run.sourceDeveloper iam.serviceAccountUser serviceusage.serviceUsageConsumer; do
-  gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member=serviceAccount:$SA --role=roles/$role
+# 2. Service accounts and roles
+for a in cloud-agent-deployer cloud-agent-builder cloud-agent-runtime; do gcloud iam service-accounts create $a; done
+for r in run.sourceDeveloper serviceusage.serviceUsageConsumer; do
+  gcloud projects add-iam-policy-binding $P --member=serviceAccount:$DEPLOY_SA --role=roles/$r
 done
-# Source deploys build with the default compute account
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member=serviceAccount:$RUNTIME_SA --role=roles/run.builder
+gcloud projects add-iam-policy-binding $P --member=serviceAccount:$BUILD_SA --role=roles/run.builder
+for sa in $BUILD_SA $RUN_SA; do
+  gcloud iam service-accounts add-iam-policy-binding $sa \
+    --member=serviceAccount:$DEPLOY_SA --role=roles/iam.serviceAccountUser
+done
+
+# 3. OpenAI key in Secret Manager, readable only by the runtime account
+gcloud secrets create cloud-agent-openai-key
+printf %s "sk-..." | gcloud secrets versions add cloud-agent-openai-key --data-file=-
+gcloud secrets add-iam-policy-binding cloud-agent-openai-key \
+  --member=serviceAccount:$RUN_SA --role=roles/secretmanager.secretAccessor
 
 # 4. Workload Identity Federation: trust GitHub tokens from this repo only
-gcloud iam workload-identity-pools create github --location=global
+gcloud iam workload-identity-pools create github --location=global   # skip if it exists
 gcloud iam workload-identity-pools providers create-oidc cloud-agent \
   --location=global --workload-identity-pool=github \
   --issuer-uri=https://token.actions.githubusercontent.com \
   --attribute-mapping=google.subject=assertion.sub,attribute.repository=assertion.repository \
   --attribute-condition="assertion.repository=='$REPO'"
-gcloud iam service-accounts add-iam-policy-binding $SA \
-  --role=roles/iam.workloadIdentityUser \
-  --member=principalSet://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/github/attribute.repository/$REPO
+gcloud iam service-accounts add-iam-policy-binding $DEPLOY_SA --role=roles/iam.workloadIdentityUser \
+  --member=principalSet://iam.googleapis.com/projects/$N/locations/global/workloadIdentityPools/github/attribute.repository/$REPO
 
-# 5. GitHub repo variables the workflow reads (not secrets; none of these are sensitive)
-gh variable set GCP_REGION --body $REGION
-gh variable set DEPLOY_SA --body $SA
-gh variable set WIF_PROVIDER --body projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/github/providers/cloud-agent
-gh variable set ALLOWED_ORIGINS --body https://your-app.vercel.app
+# 5. GitHub repo variables the workflow reads (none are secret)
+gh variable set GCP_PROJECT_ID --body $P
+gh variable set GCP_REGION --body us-central1
+gh variable set DEPLOY_SA --body $DEPLOY_SA
+gh variable set BUILD_SA --body $BUILD_SA
+gh variable set RUNTIME_SA --body $RUN_SA
+gh variable set WIF_PROVIDER --body projects/$N/locations/global/workloadIdentityPools/github/providers/cloud-agent
+gh variable set ALLOWED_ORIGINS --body https://your-app.vercel.app   # one origin, no commas
+```
+
+```bash
+# 6. After the first deploy creates the service, make it public (once).
+#    Kept out of the pipeline so the deployer never needs setIamPolicy.
+gcloud run services update cloud-agent-backend --region us-central1 --no-invoker-iam-check
 ```
 
 After that, every push to `main` that touches `backend/` runs [.github/workflows/deploy-backend.yml](.github/workflows/deploy-backend.yml). You can also start it by hand from the Actions tab.

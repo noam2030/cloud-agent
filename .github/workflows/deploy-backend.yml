@@ -20,6 +20,7 @@ jobs:
         with:
           workload_identity_provider: ${{ vars.WIF_PROVIDER }}
           service_account: ${{ vars.DEPLOY_SA }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
 
       - id: deploy
         uses: google-github-actions/deploy-cloudrun@v3
@@ -27,11 +28,18 @@ jobs:
           service: cloud-agent-backend
           region: ${{ vars.GCP_REGION }}
           source: backend # Cloud Build builds backend/Dockerfile
-          # Quoted so the comma-separated origin list stays one value.
+          # One origin only: the action splits env_vars on commas.
           env_vars: |-
-            ALLOWED_ORIGINS="${{ vars.ALLOWED_ORIGINS }}"
+            ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS }}
           secrets: |-
-            OPENAI_API_KEY=openai-api-key:latest
-          flags: --allow-unauthenticated
+            OPENAI_API_KEY=cloud-agent-openai-key:latest
+          # Capped instances limit OpenAI spend. Runs as a minimal account
+          # (reads one secret), builds as another (run.builder only).
+          # Making the service public is a one-time step (see README), so the
+          # deployer never needs setIamPolicy.
+          flags: >-
+            --max-instances=2
+            --service-account=${{ vars.RUNTIME_SA }}
+            --build-service-account=projects/${{ vars.GCP_PROJECT_ID }}/serviceAccounts/${{ vars.BUILD_SA }}
 
       - run: curl -fsS "${{ steps.deploy.outputs.url }}/api/health"
