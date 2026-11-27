@@ -2,7 +2,12 @@
 
 ## Layout
 - `frontend/`: React + TypeScript (Vite). Page in `src/App.tsx`, chat window in `src/Chat.tsx`, backend calls in `src/api.ts`.
-- `backend/`: FastAPI. Everything is in `app/main.py`.
+- `backend/app/`: FastAPI, in layers. Dependencies point one way: `main` -> `api` -> `db`, `agent` -> `models`.
+  - `main.py`: builds the app (CORS, routes). Entry point for uvicorn.
+  - `api.py`: HTTP endpoints (controller). Validation, status codes, current user.
+  - `db.py`: Firestore reads and writes. No HTTP or AI code.
+  - `agent.py`: LangChain + OpenAI. No HTTP or database code.
+  - `models.py`: shared Pydantic shapes (User, Message, Conversation).
 - `docs/`: architecture and decision records (ADRs).
 
 ## Commands
