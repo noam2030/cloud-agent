@@ -1,16 +1,82 @@
-.app {
-  max-width: 640px;
+.page {
+  max-width: 900px;
   margin: 0 auto;
   padding: 2rem 1rem;
   font-family: system-ui, sans-serif;
 }
 
-.chat {
-  border: 1px solid #ccc;
-  border-radius: 8px;
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.list li {
   display: flex;
   flex-direction: column;
-  height: 60vh;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.list span {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Fixed to the bottom-right corner, above the page content. */
+.chat-widget {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+  font-family: system-ui, sans-serif;
+  z-index: 1000;
+}
+
+.chat-toggle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: #2563eb;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.chat {
+  width: 360px;
+  max-width: calc(100vw - 3rem);
+  height: 480px;
+  max-height: calc(100vh - 8rem);
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.chat header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+}
+
+.chat header button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.25rem;
+  cursor: pointer;
 }
 
 .messages {
@@ -44,22 +110,23 @@
 .error {
   color: #b91c1c;
   margin: 0 1rem;
+  font-size: 0.9rem;
 }
 
-form {
+.chat form {
   display: flex;
   gap: 0.5rem;
   padding: 0.75rem;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid #eee;
 }
 
-input {
+.chat input {
   flex: 1;
   padding: 0.5rem;
   font-size: 1rem;
 }
 
-button {
+.chat form button {
   padding: 0.5rem 1rem;
   font-size: 1rem;
 }
