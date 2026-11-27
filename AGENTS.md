@@ -12,7 +12,7 @@
 
 ## Rules
 - Keep it simple. This is a learning project; every part should be easy to explain.
-- Never commit `.env`, `.env.local`, or API keys. Secrets live in Google Secret Manager.
+- Never commit `.env`, `.env.local`, or API keys. The OpenAI key lives in Secret Manager as `cloud-agent-openai-key`.
 - The backend is stateless: the frontend sends the full chat history on every request.
 - A new architectural choice gets an ADR in `docs/decisions/`.
 - Run `npm run build` and `npm run lint` before finishing frontend changes.
