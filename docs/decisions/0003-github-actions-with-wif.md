@@ -9,3 +9,5 @@
 **Alternatives:** A Cloud Build trigger connected to GitHub (fewer parts, but the pipeline is configured in the Google console). A JSON key stored in GitHub Secrets (simple, but a permanent credential).
 
 **Tradeoff:** WIF needs a one-time setup (pool, provider, IAM binding).
+
+**Least privilege:** Three service accounts. The deployer (what GitHub becomes) can only start source deploys. The builder can only build. The runtime account can only read the OpenAI key. The project default compute account has `editor`, so nothing uses it.
