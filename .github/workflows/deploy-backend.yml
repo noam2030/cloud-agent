@@ -28,9 +28,9 @@ jobs:
           service: cloud-agent-backend
           region: ${{ vars.GCP_REGION }}
           source: backend # Cloud Build builds backend/Dockerfile
-          # Quoted so the comma-separated origin list stays one value.
+          # One origin only: the action splits env_vars on commas.
           env_vars: |-
-            ALLOWED_ORIGINS="${{ vars.ALLOWED_ORIGINS }}"
+            ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS }}
           secrets: |-
             OPENAI_API_KEY=cloud-agent-openai-key:latest
           # Capped instances limit OpenAI spend. Runs as a minimal account

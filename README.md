@@ -93,7 +93,13 @@ gh variable set DEPLOY_SA --body $DEPLOY_SA
 gh variable set BUILD_SA --body $BUILD_SA
 gh variable set RUNTIME_SA --body $RUN_SA
 gh variable set WIF_PROVIDER --body projects/$N/locations/global/workloadIdentityPools/github/providers/cloud-agent
-gh variable set ALLOWED_ORIGINS --body https://your-app.vercel.app
+gh variable set ALLOWED_ORIGINS --body https://your-app.vercel.app   # one origin, no commas
+```
+
+```bash
+# 6. After the first deploy creates the service, make it public (once).
+#    Kept out of the pipeline so the deployer never needs setIamPolicy.
+gcloud run services update cloud-agent-backend --region us-central1 --no-invoker-iam-check
 ```
 
 After that, every push to `main` that touches `backend/` runs [.github/workflows/deploy-backend.yml](.github/workflows/deploy-backend.yml). You can also start it by hand from the Actions tab.
